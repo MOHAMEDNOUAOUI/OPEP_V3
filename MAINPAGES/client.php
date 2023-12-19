@@ -4,7 +4,17 @@ $USERS = new USERS();
 $PLANTS = new PRODUCTS();
 $PANIER = new panier();
 $CATEGORY = new CATEGORY();
+$COMMAND = new command();
 $userid = $_SESSION['emaillogin'];
+
+if(!isset($_SESSION['emaillogin'])) {
+  header('location: ../index.php');
+}
+if(isset($_SESSION['idrole'])) {
+  if($_SESSION['idrole'] !== 1) {
+      header('location: dashboard.php');
+  }
+}
 
 if(isset($_POST['logout'])) {
   session_abort();
@@ -13,8 +23,9 @@ if(isset($_POST['logout'])) {
 }
 
 if(isset($_POST['ADDTOCART'])) {
-  $idplant = $_POST['ADDTOCART'];
-  $PANIER->Add_to_cart($userid,$idplant);
+  $PANIER->set_plantID($_POST['ADDTOCART']);
+  $PANIER->set_userID($userid);
+  $PANIER->Add_to_cart();
 }
 
 if(isset($_POST['clear'])) {
@@ -26,7 +37,11 @@ if(isset($_POST['clear'])) {
 $total_price = $PANIER->calculateTotalAmount($userid);
 
 if(isset($_POST['order'])) {
-  $PANIER->order_ALL($userid);
+  $COMMAND->order_ALL($userid);
+}
+if(isset($_POST["plant_name"])) {
+  $PLANTS->setPlantName($_POST['plant_name']);
+  $plants = $PLANTS->recherche_plant_by_name();
 }
 
 
@@ -193,8 +208,8 @@ if(isset($_POST['order'])) {
           $categoryname = $CATEGORY->get_ALL_categories();
           foreach ($categoryname as $category) {
             ?>
-             <option name="category_id" value="<?php echo $category["category_id"]; ?>">
-              <?php echo $category["category_name"]; ?>
+             <option name="category_id" value="<?php echo $category->getCategoryId() ?>">
+              <?php echo $category->getCategoryName() ?>
             </option>
             <?php
           }
@@ -220,12 +235,12 @@ if(isset($_POST['filter-category']) && $_POST['category_id'] != 'ALL') {
     <article class="product__card">
     <div class="product__circle"></div>
     
-    <img src="../assets/imgs/<?php echo $plantt["plant_img"]; ?>" alt="" class="product__img">
+    <img src="../assets/imgs/<?php echo $plantt->getPlantIMG() ?>" alt="" class="product__img">
     
-    <h3 class="product__title"><?php echo $plantt["plant_name"]; ?></h3>
-    <span class="product__price"><?php echo $plantt["plant_price"]; ?>$</span>
+    <h3 class="product__title"><?php echo $plantt->getPlantName()?></h3>
+    <span class="product__price"><?php echo $plantt->getPlantPrice() ?>$</span>
     <form method="post">
-    <button name="ADDTOCART" value="<?php echo $plantt['plant_id']?>" type="submit" class="button--flex product__button">
+    <button name="ADDTOCART" value="<?php echo $plantt->getPlantId()?>" type="submit" class="button--flex product__button">
     <i class="ri-shopping-bag-line"></i>
     </button>
     </form>
@@ -234,19 +249,17 @@ if(isset($_POST['filter-category']) && $_POST['category_id'] != 'ALL') {
 }
 }
 elseif(isset($_POST['plant_name'])) {
-      $plant_name = $_POST['plant_name'];
-      $plantt = $PLANTS->recherche_plant_by_name($plant_name);
-      foreach($plantt as $plantt) {
+      foreach($plants as $plant) {
 ?>
 <article class="product__card">
     <div class="product__circle"></div>
     
-    <img src="../assets/imgs/<?php echo $plantt["plant_img"]; ?>" alt="" class="product__img">
+    <img src="../assets/imgs/<?php echo $plant->getPlantIMG() ?>" alt="" class="product__img">
     
-    <h3 class="product__title"><?php echo $plantt["plant_name"]; ?></h3>
-    <span class="product__price"><?php echo $plantt["plant_price"]; ?>$</span>
+    <h3 class="product__title"><?php echo $plant->getPlantName() ?></h3>
+    <span class="product__price"><?php echo $plant->getPlantPrice() ?>$</span>
     <form method="post">
-    <button name="ADDTOCART" value="<?php echo $plantt['plant_id']?>" type="submit" class="button--flex product__button">
+    <button name="ADDTOCART" value="<?php echo $plant->getPlantId()?>" type="submit" class="button--flex product__button">
     <i class="ri-shopping-bag-line"></i>
     </button>
     </form>
@@ -257,17 +270,17 @@ elseif(isset($_POST['plant_name'])) {
   }
   else {
     $row = $PLANTS->retrieve_products();
-foreach($row as $plant) {
+foreach($row as $product) {
     ?>
     <article class="product__card">
     <div class="product__circle"></div>
     
-    <img src="../assets/imgs/<?php echo $plant["plant_img"]; ?>" alt="" class="product__img">
+    <img src="../assets/imgs/<?php echo $product->getPlantIMG() ?>" alt="" class="product__img">
     
-    <h3 class="product__title"><?php echo $plant["plant_name"]; ?></h3>
-    <span class="product__price"><?php echo $plant["plant_price"]; ?>$</span>
+    <h3 class="product__title"><?php echo $product->getPlantName() ?></h3>
+    <span class="product__price"><?php echo $product->getPlantPrice()?>$</span>
     <form method="post">
-    <button name="ADDTOCART" value="<?php echo $plant['plant_id']?>" type="submit" class="button--flex product__button">
+    <button name="ADDTOCART" value="<?php echo $product->getPlantId()?>" type="submit" class="button--flex product__button">
     <i class="ri-shopping-bag-line"></i>
     </button>
     </form>
@@ -289,7 +302,7 @@ foreach($row as $plant) {
     <div class="footer__container container grid">
       <div class="footer__content">
         <a href="#" class="nav__logo">
-          <img src="./assets/imgs/logoG.png" alt="">
+          <img src="../assets/imgs/logoG.png" alt="">
         </a>
 
 

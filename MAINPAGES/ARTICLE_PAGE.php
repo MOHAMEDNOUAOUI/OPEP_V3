@@ -84,96 +84,70 @@ $idtheme = $ARTICLE->Get_ThemID($articleID);
     <?php
     $result = $ARTICLE->check_Article_USER($articleID,$user_id);
     $rowcount = $result['row_count'];
+    $articles = $result['fetched_result'];
+    $resultuser = $result['user_c'];
     
     if($rowcount > 0) {
-      $row = $result['fetched_result'];
+      foreach($articles as $article) {
         ?>
-
-        
-        <div class="">
-        <H1 class="text-center"><?php echo $row['article_title']?></h1>
+         <div class="">
+        <H1 class="text-center"><?php echo $article->__get('article_title')?></h1>
        <?php
-       if($row['article_user'] == $user_id || $row['role_id'] == 2){
+       if($article->__get('article_user') == $user_id ||  $resultuser['role_id'] == 2){
         ?>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#<?php echo $uniqueID?>">Modify</button>
         <form action="./delete_article.php" method="post" class="d-inline">
-            <input type="hidden" name="articleID" value="<?php echo $articleID ?>">
-            <button type="submit" class="btn btn-danger" value="<?php echo $row['article_id']?>">DELETE ARTICLE</button>
+            <input type="hidden" name="articleID" value="<?php echo $article->__get('article_id') ?>">
+            <button type="submit" class="btn btn-danger" value="<?php echo $article->__get('article_id')?>">DELETE ARTICLE</button>
         </form>
         <?php
        }
        ?>
         </div>
+        <?php
+        ?>
+       
 
 
         <?php
-        $article_by_id = $ARTICLE->load_article_by_id($articleID);
-        
-        foreach ($article_by_id as $article):
-            $article_id = $articleID;
-            $likes_count = mysqli_fetch_assoc(mysqli_query($con,
-                "SELECT COUNT(*) AS likes FROM ratings WHERE article_id = $article_id AND status = 'like'"))['likes'];
-            $dislikes_count = mysqli_fetch_assoc(mysqli_query($con,
-                "SELECT COUNT(*) AS dislikes FROM ratings WHERE article_id = $article_id AND status = 'dislike'"))['dislikes'];
-            $status = mysqli_query($con, "SELECT status FROM ratings WHERE article_id = $article_id AND user_id = $user_id ");
-            if (mysqli_num_rows($status) > 0) {
-                $status = mysqli_fetch_assoc($status)['status'];
-            } else {
-                $status = 0;
-            }
+            
             ?>
 <div class="modal fade" id="<?php echo $uniqueID?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">ARTICLE ID : <?php echo $row['article_id']?></h1>
+        <h1 class="modal-title fs-5" id="exampleModalLabel">ARTICLE ID : <?php echo $article->__get('article_id')?></h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <label for="article_title">article_title</label>
-        <input type="text" class="w-100 article_title" value="<?php echo $row['article_title']?>">
+        <input type="text" class="w-100 article_title" value="<?php echo $article->__get('article_title')?>">
         <label for="textarea" class="mt-1">article_text</label>
-        <textarea class="form-control mt-2 message-text"><?php echo $row['article_text']?></textarea>
+        <textarea class="form-control mt-2 message-text"><?php echo $article->__get('article_text')?></textarea>
         <form id="uploadForm" enctype="multipart/form-data">
             <input type="file" name="article_image" class="form-control article_image">
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="SAVEARTICLE btn btn-primary" value="<?php echo $row['article_id']?>">Save changes</button>
+        <button type="button" class="SAVEARTICLE btn btn-primary" value="<?php echo $article->__get('article_id')?>">Save changes</button>
       </div>
     </div>
   </div>
 </div>
 <?php
-$imageData = base64_encode($row['article_img']);
+$imageData = base64_encode($article->__get("article_image"));
 $imageType = 'image/jpeg';
 ?>
         <div>
             <div class="w-25">
-           <img src="data:<?php echo $imageType?>;base64,<?php echo $imageData?>?>" alt="article image">
+            <img class="h-96 w-96 mb-5" src="data:<?php echo $imageType ?>;base64,<?php echo $imageData ?>" alt="Article Image">
             </div>
             <div>
-                <p><?php echo $row['article_text']?></p>
+                <p><?php echo $article->__get('article_text')?></p>
             </div>
-        </div>
-<div class="like-dislike-btn">
-            <form action="./rating.php" method="post">
-               <input type="hidden" name="articleID" value="<?php echo $articleID; ?>">
-               <button name="like" value="1" class="like <?php if($status == 'like') echo "selected"; ?>" data-article-id = <?php echo $article_id ?> >
-                   <i class="fa fa-thumbs-up"></i>
-                   <span class="like_count <?php $article_id; ?> data_count = <?php echo $likes_count;  ?>"> <?php echo $likes_count; ?></span>
-               </button>
-            </form>
-            <form action="./rating.php" method="post">
-                <input type="hidden" name="articleID" value="<?php echo $articleID; ?>"  >
-                <button name="like" value="0" class="dislike <?php if($status == 'dislike') echo "selected"; ?>" data-article-id = <?php echo $article_id ?> >
-                    <i class="fa fa-thumbs-down"></i>
-                    <span class="dislike_count <?php $article_id; ?> data_count = <?php echo $dislikes_count;  ?>"> <?php echo $dislikes_count; ?></span>
-                </button>
-            </form>
-<?php endforeach; ?>
-</div>
+        </div>            
+<?php } ?>
         <!-- Modal -->
 <!-- Modal -->
 
